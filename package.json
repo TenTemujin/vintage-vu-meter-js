@@ -1,0 +1,13 @@
+
+{
+  "name": "electron-vu-meter-test",
+  "version": "1.0.0",
+  "description": "Teste básico preload + desktopCapturer",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^29.0.0"
+  }
+}

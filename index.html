@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Vintage VU Meter</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body>
+  <main class="app-container" role="main" aria-label="Vintage VU Meter">
+    <section class="controls" aria-label="Audio controls">
+      <label for="source-select" class="visually-hidden">Select Audio Source</label>
+      <select id="source-select" aria-describedby="source-desc">
+        <option value="">-- Select Audio Source --</option>
+      </select>
+      <span id="source-desc" class="visually-hidden">Choose the audio input source</span>
+
+      <div class="checkbox-container">
+        <input
+          type="checkbox"
+          id="always-on-top-checkbox"
+          aria-checked="false"
+          role="checkbox"
+        />
+        <label for="always-on-top-checkbox">Always on Top</label>
+      </div>
+    </section>
+
+    <section class="meter-container" aria-label="VU Meter visualization">
+      <canvas id="vuMeter" width="450" height="200" role="img" aria-live="polite" aria-label="Volume level meter"></canvas>
+    </section>
+  </main>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

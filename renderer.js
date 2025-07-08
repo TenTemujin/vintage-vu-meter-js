@@ -156,17 +156,14 @@ function drawMeter() {
   ctx.fillStyle = faceColor;
   ctx.fillRect(inset, inset, w - inset * 2, h - inset * 2);
 
-  const labels = [
-    { text: MIN_DB.toString(), pos: 0.0 },
-    { text: '-30', pos: 0.3 },
-    { text: '-10', pos: 0.5 },
-    { text: '-7', pos: 0.6 },
-    { text: '-5', pos: 0.7 },
-    { text: '0', pos: 0.8 },
-    { text: '+3', pos: 1.0 }
-  ];
+  // Gerar labels a cada 3 dB de -20 até +3
+  const labels = [];
+  for (let db = MIN_DB; db <= MAX_DB; db += 3) {
+    const pos = (db - MIN_DB) / (MAX_DB - MIN_DB);
+    labels.push({ text: db.toString(), pos });
+  }
 
-  const zeroDbPos = labels.find(l => l.text === '0').pos;
+  const zeroDbPos = (0 - MIN_DB) / (MAX_DB - MIN_DB);
 
   ctx.beginPath();
   const redZoneStartAngle = minA + range * zeroDbPos;

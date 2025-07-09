@@ -1,10 +1,16 @@
+/* --- VARIABLE & COLOR PALETTE REFINEMENT --- */
 :root {
-  --bg-color: #2b2b2b;
-  --control-bg: #3c3c3c;
-  --control-border: #555;
-  --text-color: #e0e0e0;
-  --accent-color: #fa923f;
+  --bg-color: #1a1a1e;
+  --panel-bg: rgba(43, 43, 43, 0.7);
+  --control-bg: rgba(30, 30, 30, 0.6);
+  --control-border: rgba(255, 255, 255, 0.15);
+  --text-color: #e8e8e8;
+  --accent-color: #ff8c00; /* DarkOrange - more vibrant */
+  --highlight: #ffaf4d;
   --font-family: 'Roboto Mono', monospace;
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --inset-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.7);
+  --transition-speed: 0.3s;
 }
 
 *,
@@ -13,108 +19,174 @@
   box-sizing: border-box;
 }
 
-body,
-html {
+/* --- DYNAMIC & TEXTURED BACKGROUND --- */
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  background-color: var(--bg-color);
   font-family: var(--font-family);
   color: var(--text-color);
   display: flex;
   justify-content: center;
   align-items: center;
   overflow: hidden;
+  background-color: var(--bg-color);
+  background-image: radial-gradient(circle at top, rgba(80, 80, 80, 0.3) 0%, transparent 40%),
+    url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23222' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+/* --- "GLASSMORPHISM" APP CONTAINER --- */
 .app-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   width: 95vw;
-  max-width: 600px;
-  padding: 20px;
-  gap: 20px;
+  max-width: 700px;
+  padding: 24px;
+  gap: 24px;
+  background: var(--panel-bg);
+  border-radius: 20px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
+/* --- DEBOSSED CONTROLS PANEL --- */
 .controls {
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 12px 20px;
-  background-color: var(--control-bg);
-  border-radius: 10px;
-  box-shadow:
-    0 2px 5px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  padding: 16px 24px;
+  background: var(--control-bg);
+  border-radius: 16px;
+  box-shadow: var(--inset-shadow);
+  border: 1px solid rgba(0, 0, 0, 0.5);
   width: 100%;
 }
 
+/* --- ENHANCED DROPDOWN SELECTOR --- */
 #source-select {
   flex-grow: 1;
-  padding: 10px 14px;
-  border-radius: 6px;
+  padding: 12px 16px;
+  border-radius: 10px;
   border: 1px solid var(--control-border);
-  background-color: #4f4f4f;
+  background-color: rgba(68, 68, 68, 0.5);
   color: var(--text-color);
   font-size: 1rem;
-  transition: border-color 0.3s ease, box-shadow 0.3s ease;
   appearance: none;
   cursor: pointer;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20fill%3D'%23E0E0E0'%20height%3D'24'%20viewBox%3D'0%200%2024%2024'%20width%3D'24'%20xmlns%3D'http%3A//www.w3.org/2000/svg'%3E%3Cpath%20d%3D'M7%2010l5%205%205-5z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20fill%3D'%23E8E8E8'%20height%3D'24'%20viewBox%3D'0%200%2024%2024'%20width%3D'24'%20xmlns%3D'http%3A//www.w3.org/2000/svg'%3E%3Cpath%20d%3D'M7%2010l5%205%205-5z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 16px 16px;
+  background-position: right 16px center;
+  background-size: 18px 18px;
+  transition: all var(--transition-speed) cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+#source-select:hover {
+  border-color: var(--highlight);
+  transform: translateY(-2px);
 }
 
 #source-select:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 8px var(--accent-color);
-  background-color: #575757;
+  box-shadow: 0 0 12px rgba(255, 140, 0, 0.6);
+  background-color: rgba(80, 80, 80, 0.7);
 }
 
+/* --- FULLY CUSTOM CHECKBOX --- */
 .checkbox-container {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   user-select: none;
+  font-size: 0.95rem;
+  cursor: pointer;
 }
 
 #always-on-top-checkbox {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: var(--accent-color);
-  transition: accent-color 0.3s ease;
+  display: none; /* Hide original checkbox */
 }
 
-#always-on-top-checkbox:hover {
-  accent-color: #ffae55;
+.checkbox-container .custom-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--control-border);
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all var(--transition-speed) ease;
+  position: relative;
 }
 
+/* The checkmark */
+.checkbox-container .custom-checkbox::after {
+  content: '✓';
+  font-size: 16px;
+  color: var(--highlight);
+  position: absolute;
+  opacity: 0;
+  transform: scale(0.5);
+  transition: all var(--transition-speed) cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+
+#always-on-top-checkbox:checked + .custom-checkbox {
+  background-color: var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+#always-on-top-checkbox:checked + .custom-checkbox::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.checkbox-container:hover .custom-checkbox {
+  border-color: var(--highlight);
+}
+
+/* --- HIGH-END METER CONTAINER --- */
 .meter-container {
   width: 100%;
-  max-width: 600px;
-  height: 300px;
-  border-radius: 12px;
-  background: linear-gradient(145deg, #323232, #2a2a2a);
-  box-shadow:
-    inset 0 0 10px #111,
-    0 6px 15px rgba(0, 0, 0, 0.7);
+  height: 320px;
+  border-radius: 16px;
+  background: linear-gradient(145deg, #333, #1a1a1a);
+  box-shadow: var(--inset-shadow), var(--shadow-lg);
   display: flex;
   justify-content: center;
   align-items: center;
   position: relative;
   overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.8);
 }
 
+/* Top lighting glare effect */
+.meter-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05), transparent);
+  pointer-events: none;
+}
 
-.visually-hidden {
-  position: absolute !important;
-  height: 1px; width: 1px;
-  overflow: hidden;
-  clip: rect(1px, 1px, 1px, 1px);
-  white-space: nowrap; 
+canvas#vuMeter {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* --- RESPONSIVE ADJUSTMENTS --- */
+@media (max-width: 600px) {
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }

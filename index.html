@@ -2,39 +2,54 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="A realistic, vintage-style analog VU meter created with HTML, CSS, and JavaScript." />
   <title>Vintage VU Meter</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet" />
+
   <link rel="stylesheet" href="styles.css" />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap"
-    rel="stylesheet"
-  />
+
+  <style>
+    .visually-hidden {
+      position: absolute !important;
+      height: 1px;
+      width: 1px;
+      overflow: hidden;
+      clip: rect(1px, 1px, 1px, 1px);
+      white-space: nowrap;
+    }
+  </style>
 </head>
+
 <body>
-  <main class="app-container" role="main" aria-label="Vintage VU Meter">
-    <section class="controls" aria-label="Audio controls">
+  <main class="app-container" role="main" aria-label="Vintage VU Meter Application">
+    <section class="controls" aria-labelledby="controls-heading">
+      <h2 id="controls-heading" class="visually-hidden">Audio Controls</h2>
+      
       <label for="source-select" class="visually-hidden">Select Audio Source</label>
-      <select id="source-select" aria-describedby="source-desc">
+      <select id="source-select">
         <option value="">-- Select Audio Source --</option>
       </select>
-      <span id="source-desc" class="visually-hidden">Choose the audio input source</span>
 
-      <div class="checkbox-container">
-        <input
-          type="checkbox"
-          id="always-on-top-checkbox"
-          aria-checked="false"
-          role="checkbox"
-        />
-        <label for="always-on-top-checkbox">Always on Top</label>
-      </div>
+      <label for="always-on-top-checkbox" class="checkbox-container">
+        <input type="checkbox" id="always-on-top-checkbox" />
+        <span class="custom-checkbox" aria-hidden="true"></span>
+        <span>Always on Top</span>
+      </label>
     </section>
 
-    <section class="meter-container" aria-label="VU Meter visualization">
-      <canvas id="vuMeter" width="450" height="200" role="img" aria-live="polite" aria-label="Volume level meter"></canvas>
+    <section class="meter-container" aria-labelledby="meter-heading">
+      <h2 id="meter-heading" class="visually-hidden">VU Meter Visualization</h2>
+      
+      <canvas id="vuMeter" width="450" height="200" role="img" aria-label="Analog volume level meter"></canvas>
+      
+      <div id="vu-meter-reading" class="visually-hidden" aria-live="polite"></div>
     </section>
   </main>
 
-  <script src="renderer.js"></script>
+  <script src="renderer.js" defer></script>
 </body>
 </html>

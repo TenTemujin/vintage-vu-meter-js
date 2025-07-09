@@ -15,23 +15,33 @@ const vuState = {
 
 let noisePattern = null;
 
-// Helper to create the meter face's "old paper" texture
+// IMPROVEMENT: Helper to create a more organic, aged paper texture
 function createNoiseTexture(ctx) {
-    const size = 128;
+    const size = 256; // Larger size for a less repetitive pattern
     const noiseCanvas = document.createElement('canvas');
     noiseCanvas.width = size;
     noiseCanvas.height = size;
     const noiseCtx = noiseCanvas.getContext('2d');
     const imageData = noiseCtx.createImageData(size, size);
-    for (let i = 0; i < imageData.data.length; i += 4) {
-        const val = Math.random() * 45;
-        // Creates a subtle, warm gray noise pattern
-        imageData.data[i] = imageData.data[i + 1] = imageData.data[i + 2] = 208 + val;
-        imageData.data[i + 3] = 15; // Low alpha to make it a subtle texture
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+        // Base noise for texture
+        const val = Math.random() * 40;
+        // Subtle, large-scale mottling/staining effect
+        const x = (i / 4) % size;
+        const y = Math.floor((i / 4) / size);
+        const stain = (Math.sin(x * 0.05) + Math.cos(y * 0.03)) * 5; // Larger, smoother waves of color
+        
+        // Creates a warm, aged gray with hints of yellow/brown
+        data[i]     = 225 + val + stain; // R
+        data[i + 1] = 218 + val;         // G
+        data[i + 2] = 208 + val;         // B
+        data[i + 3] = 18;                // Low alpha for subtlety
     }
     noiseCtx.putImageData(imageData, 0, 0);
     return ctx.createPattern(noiseCanvas, 'repeat');
 }
+
 
 window.addEventListener('DOMContentLoaded', () => {
     const select = document.getElementById('source-select');
@@ -119,33 +129,25 @@ function updateVolume() {
     if (analyser) {
         const data = new Uint8Array(analyser.frequencyBinCount);
         analyser.getByteFrequencyData(data);
-        // Use RMS of amplitude for a value closer to perceived loudness
         const avgAmplitude = data.reduce((sum, v) => sum + v * v, 0) / data.length;
         targetDb = byteToDb(Math.sqrt(avgAmplitude) * 1.6);
     }
 
     // --- Needle Physics (Mass, Spring, Damping) ---
-    const springiness = 0.07; // How strongly the needle is pulled to the target (Spring)
-    const damping = 0.88;     // How much friction/resistance opposes the movement (Damping)
+    const springiness = 0.07;
+    const damping = 0.88;    
 
-    // Calculate the force pulling the needle (F = kx)
     const force = (targetDb - vuState.value) * springiness;
-
-    // Update acceleration (a = F/m, assuming mass m=1)
     vuState.acceleration = force;
-
-    // Update velocity
     vuState.velocity += vuState.acceleration;
-    vuState.velocity *= damping; // Apply damping
-
-    // Update the needle's position
+    vuState.velocity *= damping;
     vuState.value += vuState.velocity;
 
     // --- Peak-hold Logic ---
     if (vuState.value > vuState.peak) {
         vuState.peak = vuState.value;
     } else {
-        vuState.peak -= 0.04; // How quickly the peak value falls
+        vuState.peak -= 0.04;
     }
     vuState.peak = Math.max(vuState.peak, MIN_DB);
 
@@ -166,7 +168,7 @@ function drawMeter() {
     const w = canvas.width;
     const h = canvas.height;
     const pivot = { x: w / 2, y: h * 0.88 };
-    const r = w * 0.26; // Radius of the scale arc
+    const r = w * 0.26;
     const inset = w * 0.03;
 
     const centerAngle = -Math.PI / 2;
@@ -177,15 +179,21 @@ function drawMeter() {
     const font = `'Helvetica Neue', 'Helvetica', 'Arial', sans-serif`;
 
     // --- 1. Brushed Metal Bezel ---
-    ctx.fillStyle = '#111';
+    // IMPROVEMENT: Added a base gradient to simulate light on a curved metal surface.
+    const bezelGrad = ctx.createLinearGradient(0, inset, 0, h - inset);
+    bezelGrad.addColorStop(0, '#555');
+    bezelGrad.addColorStop(0.5, '#222');
+    bezelGrad.addColorStop(1, '#444');
+    ctx.fillStyle = bezelGrad;
     ctx.fillRect(0, 0, w, h);
+
     ctx.save();
-    ctx.translate(w/2, h/2);
-    // Draw many fine, semi-transparent arcs to simulate a brushed texture
-    for (let i = 0; i < 200; i++) {
+    ctx.translate(w / 2, h / 2);
+    for (let i = 0; i < 250; i++) { // More lines for a finer grain
         ctx.beginPath();
-        ctx.arc(0, 0, Math.max(w,h) * 0.3 + i * 2, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(255, 255, 255, ${Math.random() * 0.035})`;
+        ctx.arc(0, 0, Math.max(w, h) * 0.3 + i * 1.5, 0, Math.PI * 2);
+        // Vary alpha and add a slight color tint to the brushing
+        ctx.strokeStyle = `rgba(255, 255, 255, ${Math.random() * 0.03 + 0.005})`;
         ctx.stroke();
     }
     ctx.restore();
@@ -196,15 +204,14 @@ function drawMeter() {
     ctx.beginPath();
     ctx.roundRect(...faceRect, w * 0.015);
     ctx.clip();
-    ctx.fillStyle = '#e1d8cc'; // Aged paper color
+    ctx.fillStyle = '#e1d8cc';
     ctx.fillRect(0, 0, w, h);
-    ctx.fillStyle = noisePattern; // Apply texture
+    ctx.fillStyle = noisePattern;
     ctx.fillRect(0, 0, w, h);
-    // Inner shadow to make the face look recessed
-    ctx.shadowColor = 'rgba(0,0,0,0.5)';
-    ctx.shadowBlur = inset;
-    ctx.shadowOffsetX = inset / 4;
-    ctx.shadowOffsetY = inset / 4;
+    ctx.shadowColor = 'rgba(0,0,0,0.6)';
+    ctx.shadowBlur = inset * 1.2;
+    ctx.shadowOffsetX = inset / 3;
+    ctx.shadowOffsetY = inset / 3;
     ctx.stroke();
     ctx.restore();
 
@@ -212,36 +219,40 @@ function drawMeter() {
     function drawInkedText(text, x, y, size, color, align = 'center', weight = 'normal') {
         ctx.font = `${weight} ${size}px ${font}`;
         ctx.textAlign = align;
-        // Draw a slightly offset shadow to simulate raised ink
-        ctx.fillStyle = 'rgba(0,0,0,0.25)';
-        ctx.fillText(text, x + 0.5, y + 0.5);
-        // Draw the main text
+        // IMPROVEMENT: Added a tiny shadowBlur to simulate ink bleeding into the paper.
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 0.8; 
+        ctx.shadowOffsetX = 0.5;
+        ctx.shadowOffsetY = 0.5;
         ctx.fillStyle = color;
         ctx.fillText(text, x, y);
+        // Reset shadow for subsequent drawing operations
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
     }
-    
-    // Draw the scale using a loop, with numbers on each tick
+
+    // Draw the scale
     for (let db = MIN_DB; db <= MAX_DB; db += 3) {
         const pos = (db - MIN_DB) / (MAX_DB - MIN_DB);
         const a = minA + range * pos;
         const isMajor = db % 6 === 0;
         const tickLen = isMajor ? h * 0.015 : h * 0.009;
-        
+
         ctx.beginPath();
         ctx.moveTo(pivot.x + Math.cos(a) * (r - tickLen), pivot.y + Math.sin(a) * (r - tickLen));
         ctx.lineTo(pivot.x + Math.cos(a) * r, pivot.y + Math.sin(a) * r);
-        ctx.strokeStyle = `rgba(50, 50, 50, ${db >= 0 ? 0.6 : 0.4})`;
-        ctx.lineWidth = isMajor ? w * 0.003 : w * 0.002;
+        ctx.strokeStyle = `rgba(50, 50, 50, ${db >= 0 ? 0.7 : 0.5})`;
+        ctx.lineWidth = isMajor ? w * 0.0035 : w * 0.002;
         ctx.stroke();
 
-        // Draw number for every point, colored red if in the positive range
         drawInkedText(db.toString(),
             pivot.x + Math.cos(a) * (r + w * 0.03),
             pivot.y + Math.sin(a) * (r + w * 0.03),
             w * 0.022, db >= 0 ? '#c13a33' : '#333'
         );
     }
-    
+
     // VU Logo and dB Readout
     drawInkedText('VU', w / 2, h * 0.45, `bold ${w * 0.05}px ${font}`, '#333');
     drawInkedText(`${vuState.value.toFixed(1)} dB`, w / 2, h * 0.75, `bold ${w * 0.035}px ${font}`, '#444');
@@ -252,34 +263,34 @@ function drawMeter() {
     const lightRadius = w * 0.01;
 
     if (peakIsActive) {
-        // Draw a bright, blooming glow when the light is on
-        const gradGlow = ctx.createRadialGradient(lightPos.x, lightPos.y, 0, lightPos.x, lightPos.y, lightRadius * 3);
-        gradGlow.addColorStop(0, 'rgba(255, 50, 50, 0.4)');
-        gradGlow.addColorStop(1, 'rgba(255, 50, 50, 0)');
+        const gradGlow = ctx.createRadialGradient(lightPos.x, lightPos.y, 0, lightPos.x, lightPos.y, lightRadius * 4);
+        gradGlow.addColorStop(0, 'rgba(255, 80, 80, 0.5)');
+        gradGlow.addColorStop(1, 'rgba(255, 80, 80, 0)');
         ctx.fillStyle = gradGlow;
         ctx.beginPath();
-        ctx.arc(lightPos.x, lightPos.y, lightRadius * 3, 0, 2 * Math.PI);
+        ctx.arc(lightPos.x, lightPos.y, lightRadius * 4, 0, 2 * Math.PI);
         ctx.fill();
     }
-    // Draw the lens itself, which is brighter when active
-    const lensColor = peakIsActive ? 'rgba(255, 180, 180, 1)' : 'rgba(50, 20, 20, 1)';
-    const lensRimColor = peakIsActive ? 'rgba(200, 40, 40, 1)' : 'rgba(30, 10, 10, 1)';
-    const gradLens = ctx.createRadialGradient(lightPos.x - 2, lightPos.y - 2, 1, lightPos.x, lightPos.y, lightRadius);
+    
+    // IMPROVEMENT: Brighter hotspot in the lens when active.
+    const lensColor = peakIsActive ? 'rgba(255, 255, 255, 1)' : 'rgba(50, 20, 20, 1)';
+    const lensRimColor = peakIsActive ? 'rgba(255, 100, 100, 1)' : 'rgba(30, 10, 10, 1)';
+    const gradLens = ctx.createRadialGradient(lightPos.x - 1, lightPos.y - 1, 0, lightPos.x, lightPos.y, lightRadius);
     gradLens.addColorStop(0, lensColor);
     gradLens.addColorStop(1, lensRimColor);
+    
     ctx.fillStyle = gradLens;
     ctx.beginPath();
     ctx.arc(lightPos.x, lightPos.y, lightRadius, 0, 2 * Math.PI);
     ctx.fill();
-
-    // The "PEAK" text also lights up
-    drawInkedText('PEAK', w / 2, h * 0.65, w * 0.022, peakIsActive ? '#ffbaba' : '#655', 'center', 'bold');
+    
+    drawInkedText('PEAK', w / 2, h * 0.65, w * 0.022, peakIsActive ? '#ff5050' : '#655', 'center', 'bold');
 
     // --- 5. Needle & Pivot ---
     const normValue = Math.max(0, Math.min(1, (vuState.value - MIN_DB) / (MAX_DB - MIN_DB)));
     const angle = minA + range * normValue;
-    
-    // Needle Shadow - crucial for 3D effect
+
+    // Needle Shadow
     ctx.save();
     ctx.translate(pivot.x, pivot.y);
     ctx.rotate(angle);
@@ -287,13 +298,13 @@ function drawMeter() {
     ctx.moveTo(0, 0);
     ctx.lineTo(r, 0);
     ctx.lineWidth = w * 0.02;
-    ctx.strokeStyle = 'rgba(0,0,0,0.1)';
-    ctx.shadowColor = 'rgba(0,0,0,0.15)';
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetY = 4;
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+    ctx.shadowColor = 'rgba(0,0,0,0.2)';
+    ctx.shadowBlur = 12;
+    ctx.shadowOffsetY = 5;
     ctx.stroke();
     ctx.restore();
-    
+
     // Needle
     ctx.save();
     ctx.translate(pivot.x, pivot.y);
@@ -303,40 +314,64 @@ function drawMeter() {
     ctx.lineTo(r, 0);
     ctx.lineTo(0, w * 0.0035);
     ctx.closePath();
-    const needleGrad = ctx.createLinearGradient(0, -w * 0.0035, 0, w * 0.0035);
+    
+    // IMPROVEMENT: More complex gradient for a 3D, rounded needle with a specular highlight.
+    const needleGrad = ctx.createLinearGradient(r / 2, -w * 0.01, r / 2, w * 0.01);
     needleGrad.addColorStop(0, '#e55a50');
+    needleGrad.addColorStop(0.45, '#ff8a80'); // Specular highlight
+    needleGrad.addColorStop(0.5, '#ff8a80');  // Specular highlight
     needleGrad.addColorStop(1, '#a02a23');
     ctx.fillStyle = needleGrad;
     ctx.fill();
     ctx.restore();
-    
+
     // Pivot Screw
     const pivotR = w * 0.015;
     ctx.beginPath();
     ctx.arc(pivot.x, pivot.y, pivotR, 0, 2 * Math.PI);
     const pivotGrad = ctx.createRadialGradient(pivot.x - 2, pivot.y - 2, 1, pivot.x, pivot.y, pivotR);
-    pivotGrad.addColorStop(0, '#777');
-    pivotGrad.addColorStop(1, '#222');
+    pivotGrad.addColorStop(0, '#999');
+    pivotGrad.addColorStop(1, '#111');
     ctx.fillStyle = pivotGrad;
     ctx.fill();
-    ctx.fillStyle = '#2a2a2a'; // Screw slot
-    ctx.fillRect(pivot.x - pivotR * 0.8, pivot.y - pivotR * 0.15, pivotR * 1.6, pivotR * 0.3);
+    
+    // IMPROVEMENT: Added a simple gradient to the screw slot to give it depth.
+    const slotRect = [pivot.x - pivotR * 0.8, pivot.y - pivotR * 0.15, pivotR * 1.6, pivotR * 0.3];
+    const slotGrad = ctx.createLinearGradient(slotRect[0], slotRect[1], slotRect[0], slotRect[1] + slotRect[3]);
+    slotGrad.addColorStop(0, '#1a1a1a');
+    slotGrad.addColorStop(1, '#3a3a3a');
+    ctx.fillStyle = slotGrad; 
+    ctx.fillRect(...slotRect);
 
     // --- 6. Glass Glare & Bevel ---
     ctx.save();
     ctx.roundRect(...faceRect, w * 0.015);
     ctx.clip();
+    
+    // Base glare
     const glassGrad = ctx.createLinearGradient(0, 0, w, h);
     glassGrad.addColorStop(0, 'rgba(255,255,255,0.12)');
-    glassGrad.addColorStop(0.5, 'rgba(255,255,255,0)');
+    glassGrad.addColorStop(0.5, 'rgba(255,255,255,0.05)');
+    glassGrad.addColorStop(1, 'rgba(255,255,255,0.1)');
     ctx.fillStyle = glassGrad;
-    ctx.fillRect(0,0,w,h);
+    ctx.fillRect(0, 0, w, h);
+    
+    // IMPROVEMENT: Added a second, sharp, curved highlight for more realistic glass.
+    ctx.beginPath();
+    ctx.moveTo(inset, inset);
+    ctx.bezierCurveTo(w * 0.4, inset * 2, w * 0.6, h * 0.3, w - inset, h * 0.4);
+    ctx.lineTo(w - inset, inset);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    ctx.fill();
+
     // Beveled edge highlight
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
     ctx.lineWidth = 1.5;
-    ctx.shadowColor = 'white';
-    ctx.shadowBlur = 4;
+    ctx.shadowColor = 'rgba(255, 255, 255, 0.8)';
+    ctx.shadowBlur = 5;
     ctx.stroke();
+    
     ctx.restore();
 
     requestAnimationFrame(drawMeter);

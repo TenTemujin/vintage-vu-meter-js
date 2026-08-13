@@ -1,0 +1,603 @@
+/* --- PHOTOREALISTIC PALETTE & VARIABLES --- */
+:root {
+  --vfd-color: #ffb36e; /* Default Amber */
+  --vfd-shadow: rgba(255, 179, 110, 0.65);
+  --vfd-glow: rgba(255, 179, 110, 0.9);
+  --font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  --font-mono: 'Roboto Mono', monospace;
+  --shadow-deep: 10px 10px 30px rgba(0, 0, 0, 0.5);
+  --inset-shadow-deep: inset 0 4px 10px rgba(0, 0, 0, 0.8);
+  --transition-speed: 0.3s;
+  --tilt-x: 0;
+  --tilt-y: 4;
+}
+
+/* THEME: NEVE (Dark British Console) */
+[data-theme="neve"] {
+  --chassis-bg-start: #2b3036;
+  --chassis-bg-end: #1a1d21;
+  --recessed-bg: #111215;
+  --screw-color: #5a5f66;
+  --text-color: #d1d5db;
+  --text-shadow: 0 1px 1px rgba(0, 0, 0, 0.7);
+  --accent-color: #e53935;
+  --led-glow: 0 0 6px var(--accent-color), 0 0 18px var(--accent-color), 0 0 32px rgba(229, 57, 53, 0.6);
+  --highlight: #ff6b6b;
+  --meter-bezel: linear-gradient(145deg, #1e2226, #111315);
+  --vfd-color: #ffaa55;
+  --vfd-shadow: rgba(255, 170, 85, 0.65);
+  --vfd-glow: rgba(255, 170, 85, 0.9);
+}
+
+/* THEME: SSL (Modern Studio Gray) */
+[data-theme="ssl"] {
+  --chassis-bg-start: #6b7278;
+  --chassis-bg-end: #4e555b;
+  --recessed-bg: #2a2e33;
+  --screw-color: #aeb4b8;
+  --text-color: #e2e8f0;
+  --text-shadow: 0 1px 1px rgba(0, 0, 0, 0.4);
+  --accent-color: #4ade80;
+  --led-glow: 0 0 6px var(--accent-color), 0 0 18px var(--accent-color), 0 0 32px rgba(74, 222, 128, 0.6);
+  --highlight: #86efac;
+  --meter-bezel: linear-gradient(145deg, #3a4047, #212529);
+  --vfd-color: #4ade80;
+  --vfd-shadow: rgba(74, 222, 128, 0.5);
+  --vfd-glow: rgba(74, 222, 128, 0.8);
+}
+
+/* THEME: MARANTZ (Vintage Hi-Fi Silver) */
+[data-theme="marantz"] {
+  --chassis-bg-start: #e2e4e8;
+  --chassis-bg-end: #b6b9c2;
+  --recessed-bg: #8c909c;
+  --screw-color: #d1d4d8;
+  --text-color: #1a1c23;
+  --text-shadow: 0 1px 1px rgba(255, 255, 255, 0.6);
+  --accent-color: #3b82f6;
+  --led-glow: 0 0 6px var(--accent-color), 0 0 18px var(--accent-color), 0 0 32px rgba(59, 130, 246, 0.6);
+  --highlight: #93c5fd;
+  --meter-bezel: linear-gradient(145deg, #cbd0d8, #9fa5b0);
+  --vfd-color: #60a5fa;
+  --vfd-shadow: rgba(96, 165, 250, 0.6);
+  --vfd-glow: rgba(96, 165, 250, 0.9);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* --- ENVIRONMENT & LIGHTING --- */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: var(--font-family);
+  color: var(--text-color);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  /* A near-black stage with a single hard studio spotlight falling on the
+     meter, so the chassis reads as a photographed hero object rather than
+     a UI panel sitting on a flat background. */
+  background-color: #060607;
+  background-image:
+    radial-gradient(circle at 50% 38%, rgba(255, 225, 190, 0.14) 0%, rgba(255, 225, 190, 0.05) 22%, transparent 55%),
+    radial-gradient(circle at 50% 42%, rgba(200, 200, 220, 0.06) 0%, transparent 65%),
+    linear-gradient(to bottom, #050506 0%, #0c0c0e 45%, #050506 100%);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Mild camera perspective so the rack unit below reads as a photographed
+     object viewed slightly from below, like a hero shot of gear sitting in
+     a rack at eye level or just above it. */
+  perspective: 1700px;
+}
+
+/* Thin cropped slivers of the units immediately above and below, as if the
+   camera is framed tight on a single space in a taller rack column. Fixed
+   to the viewport edges, behind everything else on the stage. */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 20px;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(to bottom, #333336, #1a1a1c 55%, #0a0a0a);
+  background-image:
+    radial-gradient(circle at 22% 50%, rgba(120, 200, 140, 0.5) 0%, transparent 3%),
+    radial-gradient(circle at 78% 50%, rgba(90, 90, 95, 0.8) 0%, transparent 4%),
+    linear-gradient(to bottom, #333336, #1a1a1c 55%, #0a0a0a);
+  box-shadow: 0 0 12px 2px rgba(0, 0, 0, 0.7);
+}
+body::before { top: 0; }
+body::after { bottom: 0; transform: scaleY(-1); }
+
+/* --- HARDWARE CHASSIS --- */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 95vw;
+  max-width: 860px;
+  padding: 26px 58px;
+  gap: 24px;
+  border-radius: 3px;
+  position: relative;
+  z-index: 1;
+  /* Brushed aluminum texture */
+  background: linear-gradient(165deg, var(--chassis-bg-start), var(--chassis-bg-end));
+  /* 3D bevel effect, with a hotter top rim as if catching the spotlight
+     directly above the stage */
+  border-top: 1px solid rgba(255, 235, 210, 0.35);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+  border-right: 1px solid rgba(0, 0, 0, 0.3);
+  box-shadow:
+    var(--shadow-deep),
+    var(--inset-shadow-deep),
+    0 -1px 0 rgba(255, 235, 210, 0.08),
+    0 40px 90px -20px rgba(224, 130, 47, 0.18);
+  /* Interactive 3D tilt based on mouse position (set via JS), falling back
+     to a subtle static angle if no mouse movement is detected. */
+  transform: rotateX(calc(var(--tilt-y, 4) * 1deg)) rotateY(calc(var(--tilt-x, 0) * 1deg));
+  transform-origin: center center;
+  transition: transform 0.1s ease-out, box-shadow 0.2s ease;
+}
+
+/* Soft reflection cast onto the dark stage floor */
+.app-container-reflection {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 70px;
+  margin-top: 2px;
+  border-radius: 3px;
+  background: linear-gradient(165deg, var(--chassis-bg-start), var(--chassis-bg-end));
+  transform: scaleY(-1);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), transparent 90%);
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.35), transparent 90%);
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: -1;
+  transition: opacity 0.3s ease;
+}
+
+/* Diagonal brushed-aluminum grain, laid over the chassis gradient */
+.app-container::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  background-image: repeating-linear-gradient(
+    97deg,
+    rgba(255, 255, 255, 0.05) 0px,
+    rgba(255, 255, 255, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  mix-blend-mode: overlay;
+  pointer-events: none;
+}
+
+/* Soft overhead sheen plus a diagonal anisotropic highlight band, as brushed
+   aluminum actually catches light unevenly along the grain rather than in a
+   perfectly uniform sheen. */
+.app-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(255, 255, 255, 0.12), transparent 55%),
+    linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, 0.045) 44%, rgba(255, 255, 255, 0.09) 50%, rgba(255, 255, 255, 0.02) 56%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Corner screws for realism, each with a slightly different slot angle
+   so the panel reads as hand-assembled rather than vector-perfect */
+.screw {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #b0b0b6 0%, #7a7a80 55%, #45454a 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.4),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.6),
+    0 1px 1px rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+.screw::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 68%;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.65);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+/* --- RACK MOUNTING EARS ---
+   The strips of chassis reserved by .app-container's wide horizontal
+   padding, styled as separate riveted flanges bolted to the rack's rails —
+   the single most recognizable cue that this is mounted gear, not a
+   standalone box. Each ear carries two oversized rack bolts. */
+.rack-ear {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 44px;
+  background: linear-gradient(165deg, #47474b, #343437 55%, #2c2c2f);
+  border-radius: 2px;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.12),
+    inset 0 -1px 3px rgba(0, 0, 0, 0.5);
+  z-index: 0;
+}
+.rack-ear::before {
+  /* Vertical brushed grain, coarser than the main panel's so the ear
+     visually reads as a separate stamped part */
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 2px;
+  background-image: repeating-linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0px,
+    rgba(255, 255, 255, 0.05) 1px,
+    transparent 1px,
+    transparent 2px
+  );
+}
+.rack-ear-left { left: 7px; }
+.rack-ear-right { right: 7px; }
+
+.rack-bolt {
+  position: absolute;
+  left: 50%;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  background: radial-gradient(circle at 35% 30%, #d4d4da 0%, #96969c 50%, #4a4a4e 100%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    inset 0 -1px 2px rgba(0, 0, 0, 0.7),
+    0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.rack-bolt::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 72%;
+  height: 1.5px;
+  background: rgba(0, 0, 0, 0.7);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.rack-bolt-top { top: 14%; }
+.rack-bolt-bottom { top: 82%; }
+.rack-ear-left .rack-bolt-top::after { transform: translate(-50%, -50%) rotate(22deg); }
+.rack-ear-left .rack-bolt-bottom::after { transform: translate(-50%, -50%) rotate(-48deg); }
+.rack-ear-right .rack-bolt-top::after { transform: translate(-50%, -50%) rotate(-15deg); }
+.rack-ear-right .rack-bolt-bottom::after { transform: translate(-50%, -50%) rotate(60deg); }
+
+/* Faceplate assembly screws, holding the inner panel to the housing —
+   distinct from the rack bolts above, sitting just inside the ears. */
+.screw-tl { top: 12px; left: 66px; }
+.screw-tl::after { transform: translate(-50%, -50%) rotate(18deg); }
+.screw-tr { top: 12px; right: 66px; }
+.screw-tr::after { transform: translate(-50%, -50%) rotate(-32deg); }
+.screw-bl { bottom: 12px; left: 66px; }
+.screw-bl::after { transform: translate(-50%, -50%) rotate(54deg); }
+.screw-br { bottom: 12px; right: 66px; }
+.screw-br::after { transform: translate(-50%, -50%) rotate(-6deg); }
+
+/* --- POWER LED --- */
+.power-led {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #b6ffb0 0%, #4ecb3f 60%, #1f6e18 100%);
+  box-shadow: 0 0 4px 1px #5fe850, 0 0 10px 3px rgba(95, 232, 80, 0.5);
+  z-index: 1;
+}
+.power-led::after {
+  content: 'PWR';
+  position: absolute;
+  top: 11px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 6px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(197, 197, 197, 0.55);
+}
+
+/* --- VENTILATION GRILLE --- */
+.vents {
+  position: absolute;
+  top: 20px;
+  right: 22px;
+  width: 36px;
+  height: 14px;
+  background-color: #000; /* Dark interior */
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent 0px,
+    transparent 3px,
+    var(--chassis-bg-end) 3px,
+    var(--chassis-bg-start) 6px
+  );
+  border-radius: 2px;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.9), /* deep cutout */
+    0 1px 0 rgba(255, 255, 255, 0.15); /* bottom highlight */
+  z-index: 1;
+}
+
+/* --- SILKSCREENED BRAND / MODEL PLATE --- */
+.brand-plate {
+  position: absolute;
+  bottom: 20px;
+  left: 90px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: rgba(197, 197, 197, 0.45);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.5);
+  z-index: 1;
+  white-space: nowrap;
+}
+.brand-plate strong {
+  color: rgba(224, 224, 224, 0.65);
+  font-weight: 700;
+}
+
+/* --- RECESSED CONTROLS PANEL --- */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 20px;
+  background: var(--recessed-bg);
+  border-radius: 3px;
+  box-shadow: var(--inset-shadow-deep);
+  width: 100%;
+  border: 1px solid #111;
+}
+
+/* --- AMBER VFD-STYLE READOUT --- */
+#theme-select, #source-select {
+  flex-grow: 1;
+  padding: 10px 16px;
+  border-radius: 2px;
+  border: 1px solid #000;
+  background-color: #170e07;
+  background-image:
+    url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20fill%3D'%23ffb36e'%20height%3D'24'%20viewBox%3D'0%200%2024%2024'%20width%3D'24'%20xmlns%3D'http%3A//www.w3.org/2000/svg'%3E%3Cpath%20d%3D'M7%2010l5%205%205-5z'/%3E%3C/svg%3E"),
+    repeating-linear-gradient(rgba(0, 0, 0, 0.22) 0px, rgba(0, 0, 0, 0.22) 1px, transparent 1px, transparent 3px),
+    linear-gradient(to bottom, #1c1108, #100a05);
+  background-repeat: no-repeat, repeat, no-repeat;
+  background-position: right 12px center, 0 0, 0 0;
+  background-size: 18px 18px, auto, auto;
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.9),
+    inset 0 0 10px rgba(0, 0, 0, 0.6),
+    0 1px 0 rgba(255, 255, 255, 0.06);
+  color: var(--vfd-color);
+  text-shadow: 0 0 5px var(--vfd-shadow), 0 0 1px var(--vfd-glow);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  letter-spacing: 0.03em;
+  appearance: none;
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+}
+
+#theme-select option, #source-select option {
+  background-color: #170e07;
+  color: var(--vfd-color);
+}
+
+#source-select:hover {
+  text-shadow: 0 0 7px var(--vfd-shadow), 0 0 2px var(--vfd-color);
+}
+
+#source-select:focus {
+  outline: none;
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.9),
+    inset 0 0 10px rgba(0, 0, 0, 0.6),
+    0 0 8px var(--vfd-shadow);
+}
+
+#theme-select:hover {
+  text-shadow: 0 0 7px var(--vfd-shadow), 0 0 2px var(--vfd-color);
+}
+
+#theme-select:focus {
+  outline: none;
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.9),
+    inset 0 0 10px rgba(0, 0, 0, 0.6),
+    0 0 8px var(--vfd-shadow);
+}
+
+/* --- ILLUMINATED PUSH-BUTTON --- */
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  user-select: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-shadow: var(--text-shadow);
+}
+
+#always-on-top-checkbox {
+  display: none;
+}
+
+/* Chrome bezel ring, like a real panel-mount indicator lamp holder screwed
+   through the faceplate, rather than a flat web checkbox dot. */
+.checkbox-container .custom-checkbox {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all var(--transition-speed) ease;
+  position: relative;
+  background: radial-gradient(circle at 35% 30%, #d8d8de 0%, #8e8e94 45%, #3a3a3e 100%);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 2px #161616,
+    inset 0 0 0 3px rgba(255, 255, 255, 0.18);
+}
+
+/* LED lens, recessed inside the bezel */
+.checkbox-container .custom-checkbox::after {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background-color: #200e0e;
+  box-shadow: inset 0 1px 2px #000, inset 0 0 3px rgba(0, 0, 0, 0.8);
+  transition: all var(--transition-speed) ease;
+}
+
+#always-on-top-checkbox:checked + .custom-checkbox::after {
+  background-color: var(--accent-color);
+  box-shadow: var(--led-glow);
+}
+
+.checkbox-container:hover .custom-checkbox {
+  background: radial-gradient(circle at 35% 30%, #e2e2e8 0%, #97979d 45%, #424246 100%);
+}
+
+/* --- STATUS / ERROR LINE --- */
+.status-message {
+  margin: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #ff8a80;
+  text-shadow: var(--text-shadow);
+}
+
+.status-message:empty {
+  display: none;
+}
+
+.status-message.status-ok {
+  color: #8fd19e;
+}
+
+/* --- HEAVY METER BEZEL --- */
+.meter-container {
+  width: 100%;
+  aspect-ratio: 5 / 3;
+  border-radius: 5px;
+  background: var(--meter-bezel);
+  /* Deep recess plus a warm bloom bleeding out past the bezel, as if the
+     incandescent lamps behind the dial were bright enough to spill light
+     onto the surrounding metal — sells the meter as the lit centerpiece. */
+  box-shadow:
+    var(--inset-shadow-deep),
+    0 0 55px -10px rgba(224, 130, 47, 0.35),
+    0 0 110px -25px rgba(224, 130, 47, 0.25);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #111;
+}
+
+/* Realistic glass reflections */
+.meter-container::before {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  right: 5px;
+  bottom: 5px;
+  border-radius: 3px;
+  /* Sharp top-left highlight */
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+.meter-container::after {
+  content: '';
+  position: absolute;
+  top: 10%;
+  left: 5%;
+  width: 90%;
+  height: 20%;
+  /* Soft broad highlight */
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 0%, transparent 100%);
+  transform: skewX(-30deg);
+  pointer-events: none;
+}
+
+canvas#vuMeter {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* --- RESPONSIVE ADJUSTMENTS --- */
+@media (max-width: 600px) {
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+/* --- FILM GRAIN ---
+   A faint noise tile (generated at runtime and set as this element's
+   background-image, see renderer.js) blended over the whole viewport. This
+   is what actually sells "photograph" over "CSS render" — every shadow and
+   gradient above is mathematically perfect, and grain is the one texture
+   that unifies them as if captured through a lens with real sensor noise. */
+.grain-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-repeat: repeat;
+  background-size: 128px 128px;
+}
+
+@media (max-width: 480px) {
+  /* Narrow rack ears rather than dropping them — the mounting flanges are
+     the whole point of the design, but they shouldn't crowd out the meter
+     on a phone-sized viewport. */
+  .app-container {
+    padding-left: 34px;
+    padding-right: 34px;
+  }
+  .rack-ear { width: 24px; }
+  .screw-tl, .screw-tr { top: 8px; }
+  .screw-bl, .screw-br { bottom: 8px; }
+  .screw-tl, .screw-bl { left: 40px; }
+  .screw-tr, .screw-br { right: 40px; }
+  .vents { display: none; }
+}

@@ -1,0 +1,22 @@
+[package]
+name = "vintage-vu-meter"
+version = "2.0.0"
+description = "Vintage-style analog VU meter with native WASAPI loopback audio capture"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[target.'cfg(windows)'.dependencies]
+wasapi = "0.24"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = true
+opt-level = "s"

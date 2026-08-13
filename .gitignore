@@ -33,10 +33,12 @@ node_modules/
 # dotenv environment files
 .env
 
-# Electron build output
+# Build output
 /dist
 /build
 /out
+src-tauri/target/
+src-tauri/gen/
 
 # VSCode settings
 .vscode/

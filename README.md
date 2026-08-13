@@ -1,33 +1,32 @@
 # Vintage VU Meter
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
-![Built with Electron](https://img.shields.io/badge/Built_with-Electron-47848F?logo=electron&logoColor=white)
+![Built with Tauri](https://img.shields.io/badge/Built_with-Tauri-FFC131?logo=tauri&logoColor=white)
 
-A cross-platform desktop application that displays a real-time, vintage-style analog VU meter for your system's audio output.
+A desktop application that displays a real-time, vintage-style analog VU meter driven by your system's actual audio output — captured natively, with no screen-recording permission required.
 
 ***
 
 ## 💡 Features
 
--   **Real-time Audio Visualization**: Renders an audio meter that reacts to the sound currently playing on your computer.
+-   **Native System Audio Capture**: Uses WASAPI loopback capture (Windows) to read the audio mix of a chosen output device directly — no window/screen picker, no screen-recording permission.
 -   **Classic Analog Design**: Features a pivoting needle, a beige background, and a calibrated dBVU scale for a retro aesthetic.
--   **Source Selection**: A dropdown menu allows you to select which screen or application window to capture audio from.
+-   **Device Selection**: A dropdown menu lists your actual audio output devices (not windows or screens).
 -   **Always on Top**: A checkbox to pin the meter window on top of all other applications for continuous monitoring.
--   **Cross-Platform**: Built with Electron, it works on Windows, macOS, and Linux.
 
 ***
 
 ## 🚀 Getting Started
 
-To run this application in your development environment, follow these steps.
-
 ### Prerequisites
 
--   [Node.js](https://nodejs.org/) (which includes npm) installed on your system.
+-   [Node.js](https://nodejs.org/) (includes npm).
+-   [Rust](https://www.rust-lang.org/tools/install) (`cargo`/`rustc`).
+-   Windows. Audio capture is implemented via WASAPI loopback and is Windows-only for now; on other platforms the app still runs but device capture returns an "unsupported" error.
 
 ### Installation
 
-1.  Clone the repository to your local machine:
+1.  Clone the repository:
     ```sh
     git clone [https://github.com/your-username/your-repository.git](https://github.com/your-username/your-repository.git)
     ```
@@ -35,55 +34,37 @@ To run this application in your development environment, follow these steps.
     ```sh
     cd your-repository
     ```
-3.  Install all project dependencies:
+3.  Install dependencies:
     ```sh
     npm install
     ```
-4.  Start the application:
+4.  Start the app in development mode:
     ```sh
-    npm start
+    npm run dev
     ```
 
 ***
 
 ## 🛠️ How to Use
 
-### ⚠️ Important: Granting Permissions
-
-To capture system audio, the application needs **Screen Recording** permissions. Modern operating systems require you to grant this manually.
-
-**On macOS:**
-1.  Open **System Settings**.
-2.  Go to **Privacy & Security** > **Screen Recording**.
-3.  Find your terminal application (e.g., `Terminal`, `iTerm`, `Visual Studio Code`) in the list and **enable the toggle switch**.
-4.  The OS will prompt you to **Quit & Reopen** the application. **This step is crucial.**
-5.  After reopening, run `npm start` again.
-
-**On Windows / Linux:**
-Permissions are generally less strict. However, ensure no third-party security software is blocking the application.
-
-### Application Features
-
--   **Select an Audio Source**: Use the dropdown menu to choose which screen or window you want to monitor. The needle will begin moving as soon as audio is detected from the selected source.
+-   **Select an Audio Device**: Use the dropdown menu to choose which output device to monitor (your default device is preselected). The needle reacts as soon as audio plays on that device.
 -   **Always on Top**: Check the box to keep the VU meter window visible over all other windows.
 
 ***
 
 ## 🔬 Technical Details
 
-This application demonstrates how to integrate various web technologies to create a useful desktop utility:
-
--   **Electron**: The core framework for building the cross-platform desktop app with JavaScript, HTML, and CSS.
--   **Electron `desktopCapturer` API**: Used to safely get a list of available media sources (screens and windows).
--   **Web Audio API**: Once a media source is captured, the Web Audio API (`AudioContext`, `AnalyserNode`) is used to analyze the audio data in real-time.
--   **HTML `<canvas>`**: Used to draw and animate the vintage-style VU meter interface, updating on every frame with `requestAnimationFrame`.
+-   **Tauri + Rust**: The app shell and native audio capture run in a small Rust backend, avoiding the overhead and permission model of a full browser engine.
+-   **`wasapi` crate**: Opens the selected output device's WASAPI client in loopback mode and streams computed dBFS levels to the UI over a Tauri IPC `Channel`.
+-   **HTML `<canvas>`**: Used to draw and animate the vintage-style VU meter interface. The static bezel/face/scale artwork is cached to an offscreen canvas and only redrawn on resize; each animation frame only repaints the needle, peak light, and dB readout.
 
 ### File Structure
 
--   `main.js`: The Electron main process. It creates the application window, handles system events, and fetches the audio sources.
--   `preload.js`: A secure bridge script that exposes specific Node.js/Electron functionalities to the renderer process in a controlled way.
--   `index.html`: The User Interface (UI) structure of the application.
--   `renderer.js`: The Electron renderer process. It handles the UI logic, user interaction, and all the animation drawing on the canvas.
+-   `src-tauri/src/main.rs`: Registers Tauri commands, creates the window.
+-   `src-tauri/src/audio.rs`: Device enumeration and WASAPI loopback capture, with dBFS level computation.
+-   `index.html`: The UI structure.
+-   `renderer.js`: UI logic, device selection, and all canvas drawing/animation.
+-   `styles.css`: Chassis and control styling.
 
 ***
 

@@ -1,13 +1,17 @@
 
 {
-  "name": "electron-vu-meter-test",
-  "version": "1.0.0",
-  "description": "Teste básico preload + desktopCapturer",
-  "main": "main.js",
+  "name": "vintage-vu-meter",
+  "version": "2.0.0",
+  "description": "Vintage-style analog VU meter with native WASAPI loopback audio capture",
+  "private": true,
   "scripts": {
-    "start": "electron ."
+    "dev": "tauri dev",
+    "build": "tauri build"
   },
   "devDependencies": {
-    "electron": "^29.0.0"
+    "@tauri-apps/cli": "^2"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2"
   }
 }
